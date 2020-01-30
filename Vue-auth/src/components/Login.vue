@@ -1,0 +1,77 @@
+<template>
+  <div>
+    <h4>Login</h4>
+    <form>
+      <label for="email" >E-Mail Address</label>
+      <div>
+        <input id="email" type="email" v-model="email" required autofocus>
+      </div>
+      <div>
+        <label for="password" >Password</label>
+        <div>
+          <input id="password" type="password" v-model="password" required>
+        </div>
+      </div>
+      <div>
+        <div>
+          <label for="password" > Repeat Password</label>
+          <div>
+            <input id="repeat" type="password" v-model="password" required>
+          </div>
+        </div>
+        <button type="submit" @click="handleSubmit">
+          Login
+        </button>
+      </div>
+      <h1 v-if="password">Bien joué !</h1>
+      <h1 v-else>Repete un nouveau mdp</h1>
+    </form>
+  </div>
+</template>
+
+
+<script>
+export default {
+  data() {
+    return {
+      email: '',
+      password: '',
+    };
+  },
+  methods: {
+    handleSubmit(e) {
+      e.preventDefault();
+      if (this.password.length > 0) {
+        this.$http.post('http://localhost:8000/login', {
+          email: this.email,
+          password: this.password,
+        })
+          .then((response) => {
+            // eslint-disable-next-line camelcase
+            const { is_admin } = response.data.user;
+            localStorage.setItem('user', JSON.stringify(response.data.user));
+            localStorage.setItem('jwt', response.data.token);
+
+            if (localStorage.getItem('jwt') != null) {
+              this.$emit('loggedIn');
+              if (this.$route.params.nextUrl != null) {
+                this.$router.push(this.$route.params.nextUrl);
+                // eslint-disable-next-line camelcase
+              } else if (is_admin === 1) {
+                this.$router.push('admin');
+              } else {
+                this.$router.push('dashboard')
+
+                  .catch((error) => {
+                    console.error(error.response);
+                  });
+              }
+            }
+          });
+      }
+    },
+  },
+};
+
+
+</script>
